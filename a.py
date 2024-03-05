@@ -9,8 +9,6 @@ import requests
 
 
 def svd_plot(img,k):
-    # Загрузка изображения
-    # Проверка, является ли путь к изображению URL-адресом
 
     # Преобразование изображения в массив NumPy
     if len(img.mode) != 1:
@@ -28,14 +26,12 @@ def svd_plot(img,k):
         scale_factor = (a + b) // 1000
         img_array = img_array[::scale_factor, ::scale_factor]
 
-
     # Выполнение сингулярного разложения
     U, Sv, VT = np.linalg.svd(img_array)
     S = np.zeros(shape = img_array.shape)
     np.fill_diagonal(S, Sv)
 
     # Уменьшение количества сингулярных значений до k
-
     U_k = U[:, :k]
     S_k = S[:k, :k]
     VT_k = VT[:k, :]
@@ -75,7 +71,7 @@ def main():
             except:
                 st.warning("Загрузка не удалась.")
                 return
-            k_value = st.slider("Выберите количество сингулярных значений (k):", 2, 100, value=10)
+            k_value = st.slider("Выберите количество сингулярных значений (k):", 2, 300, value=10)
             svd_plot(Image.open(BytesIO(response.content)),k_value)
         else:
             st.warning("Загрузите изображение перед тем, как продолжить.")
@@ -89,7 +85,7 @@ def main():
         else:
             st.warning("Загрузите изображение перед тем, как продолжить.")
             return
-        k_value = st.slider("Выберите количество сингулярных значений (k):", 2, 100, value=10)
+        k_value = st.slider("Выберите количество сингулярных значений (k):", 2, 300, value=10)
         svd_plot(Image.open(BytesIO(uploaded_file.read())),k_value)
 
     # Возможность выбора значения k
