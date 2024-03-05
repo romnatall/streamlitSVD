@@ -2,30 +2,32 @@ import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
+import io
 from io import BytesIO
 import requests
 
 
 
-def svd_plot(image_path, k):
+def svd_plot(img,k):
     # Загрузка изображения
-    if image_path.startswith("http"):
-        response = requests.get(image_path)
-        img = Image.open(BytesIO(response.content))
-    else:
-        img = Image.open(image_path)
+    # Проверка, является ли путь к изображению URL-адресом
 
-    
     # Преобразование изображения в массив NumPy
-    if len(img.mode)!=1:
-        img_array = np.array(img)[:,:,0]
+    if len(img.mode) != 1:
+        # Если изображение не в оттенках серого, берем только один канал (R)
+        img_array = np.array(img)[:, :, 0]
     else:
+        # Если изображение уже в оттенках серого, оставляем как есть
         img_array = np.array(img)
 
-    if sum(img_array.shape)>1000:
-        a,b = img_array.shape
-        sc = (a+b)//1000
-        img_array =  img_array[::sc,::sc]
+    # Уменьшение размера изображения, если его размер больше 1000
+    if sum(img_array.shape) > 1000:
+        # Получение размеров изображения
+        a, b = img_array.shape
+        # Уменьшение размера изображения с использованием масштабирования
+        scale_factor = (a + b) // 1000
+        img_array = img_array[::scale_factor, ::scale_factor]
+
 
     # Выполнение сингулярного разложения
     U, Sv, VT = np.linalg.svd(img_array)
@@ -36,11 +38,8 @@ def svd_plot(image_path, k):
 
     U_k = U[:, :k]
     S_k = S[:k, :k]
-    
     VT_k = VT[:k, :]
     
-    
-
     # Восстановление изображения
     img_approx_array = U_k @ S_k @ VT_k
 
@@ -60,6 +59,8 @@ def svd_plot(image_path, k):
 def main():
     st.title("SVD Image Approximation App")
 
+   
+
     # Возможность выбора источника изображения
     image_source = st.radio("Выберите источник изображения:", ("URL", "Файл на устройстве"))
 
@@ -69,9 +70,13 @@ def main():
         if image_url != '':
             try:
                 st.image(image_url, caption="Выбранное изображение", use_column_width=True)
+                response = requests.get(image_url)
+                
             except:
                 st.warning("Загрузка не удалась.")
                 return
+            k_value = st.slider("Выберите количество сингулярных значений (k):", 2, 100, value=10)
+            svd_plot(Image.open(BytesIO(response.content)),k_value)
         else:
             st.warning("Загрузите изображение перед тем, как продолжить.")
             return
@@ -80,17 +85,18 @@ def main():
         uploaded_file = st.file_uploader("Загрузите изображение", type=["jpg", "jpeg", "png"])
 
         if uploaded_file is not None:
-            image_url = None
             st.image(uploaded_file, caption="Выбранное изображение", use_column_width=True)
         else:
             st.warning("Загрузите изображение перед тем, как продолжить.")
             return
+        k_value = st.slider("Выберите количество сингулярных значений (k):", 2, 100, value=10)
+        svd_plot(Image.open(BytesIO(uploaded_file.read())),k_value)
 
     # Возможность выбора значения k
-    k_value = st.slider("Выберите количество сингулярных значений (k):", 2, 100, value=10)
+    
 
     # Отображение графиков
-    svd_plot(image_url, k_value)
+    
 
 if __name__ == "__main__":
     main()
