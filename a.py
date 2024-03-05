@@ -5,18 +5,7 @@ from PIL import Image
 from io import BytesIO
 import requests
 
-def resize_image(image_array, target_height=300, target_width=300):
-    """
-    Уменьшает размер массива изображения до указанных размеров.
 
-    :param image_array: Массив изображения (NumPy array).
-    :param target_height: Целевая высота изображения.
-    :param target_width: Целевая ширина изображения.
-    :return: Уменьшенный массив изображения.
-    """
-    # Использование функции resize для изменения размера
-    resized_image = np.resize(image_array, (target_height, target_width))
-    return resized_image
 
 def svd_plot(image_path, k):
     # Загрузка изображения
@@ -28,7 +17,11 @@ def svd_plot(image_path, k):
 
     
     # Преобразование изображения в массив NumPy
-    img_array = np.array(img)[:,:,0]
+    if len(img.mode)!=1:
+        img_array = np.array(img)[:,:,0]
+    else:
+        img_array = np.array(img)
+
     if sum(img_array.shape)>1000:
         a,b = img_array.shape
         sc = (a+b)//1000
